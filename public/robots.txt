@@ -1,0 +1,3 @@
+# Verbale Pallanuoto PWA
+User-agent: *
+Allow: /

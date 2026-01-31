@@ -1,0 +1,220 @@
+.giocatori-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.giocatori-screen.b {
+  background: #f8fafc;
+}
+
+.giocatori-screen.n {
+  background: #1f2937;
+}
+
+.giocatori-screen .header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 15px 20px;
+  position: relative;
+}
+
+.giocatori-screen.b .header {
+  background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+  color: #1f2937;
+}
+
+.giocatori-screen.n .header {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  color: white;
+}
+
+.btn-back {
+  /* position: absolute; */
+  left: 20px;
+  padding: 10px 16px;
+  font-size: 14px;
+  background: rgba(4, 23, 85, 0.301);
+  color: inherit;
+  border-radius: 8px;
+}
+
+.giocatori-screen h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.giocatori-screen h2 {
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* Tabella */
+.giocatori-table {
+  flex: 1;
+  margin: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header-row {
+  display: grid;
+  grid-template-columns: 50px 150px 100px repeat(4, 50px) 60px repeat(3, 120px);
+  padding: 12px 16px;
+  background: #f3f4f6;
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.table-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.giocatori-table .table-row {
+  display: grid;
+  grid-template-columns: 50px 150px 100px repeat(4, 50px) 60px repeat(3, 120px);
+  padding: 10px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  align-items: center;
+  font-size: 13px;
+}
+
+.giocatori-table .table-row:hover {
+  background: #f9fafb;
+}
+
+/* ESPULSO - SOLO SFONDO ROSSO, NESSUNA LINEA */
+.giocatori-table .table-row.espulso {
+  background: #fee2e2;
+}
+
+.col-num {
+  font-weight: 700;
+  color: #1a56db;
+  text-align: center;
+}
+
+.col-nome {
+  font-weight: 600;
+  color: #000000;
+}
+
+.col-tessera {
+  font-family: monospace;
+  color: #000000;
+  font-size: 12px;
+}
+
+.col-reti {
+  text-align: center;
+  font-weight: 500;
+  color: #000000;
+}
+
+.col-reti-tot {
+  text-align: center;
+  font-weight: 700;
+  color: #1a56db;
+  font-size: 15px;
+}
+
+.col-falli {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #000000;
+}
+
+.col-falli.fallo-giallo {
+  background: #fef3c7;
+  color: #000000;
+}
+
+.col-falli.fallo-rosso {
+  background: #fee2e2;
+  color: #000000;
+}
+
+.fallo-tempo {
+  font-weight: 600;
+}
+
+.fallo-tipo {
+  font-size: 10px;
+}
+
+/* Legenda */
+.legenda {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.legenda h3 {
+  font-size: 12px;
+  color: #000000;
+  margin: 0;
+}
+
+.legenda-item {
+  font-size: 12px;
+  color: #000000;
+}
+
+.legenda-item.fallo-giallo {
+  color: #000000;
+}
+
+.legenda-item.fallo-rosso {
+  color: #000000;
+}
+
+/* Stats */
+.stats-summary {
+  display: flex;
+  gap: 20px;
+  padding: 15px 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 20px;
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #000000;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a56db;
+}

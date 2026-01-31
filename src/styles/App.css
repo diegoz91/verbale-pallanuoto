@@ -1,0 +1,142 @@
+/* Reset e base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Bottoni comuni */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1a56db, #1e40af);
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+}
+
+.btn-primary.btn-large {
+  padding: 16px 32px;
+  font-size: 18px;
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.btn-secondary:hover {
+  background: #d1d5db;
+}
+
+/* Input comuni */
+input[type="text"],
+input[type="date"],
+input[type="time"],
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #1a56db;
+}
+
+/* Header comune */
+.header {
+  background: linear-gradient(135deg, #1a56db, #1e40af);
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.header p {
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+/* Container bottoni */
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Scrollbar personalizzata */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Utility classes */
+.text-center { text-align: center; }
+.text-bold { font-weight: 600; }
+.mt-10 { margin-top: 10px; }
+.mb-10 { margin-bottom: 10px; }
