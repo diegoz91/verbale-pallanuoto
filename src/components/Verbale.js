@@ -11,6 +11,10 @@ function Verbale() {
     dispatch({ type: 'SET_SCREEN', payload: 'partita' });
   };
 
+  const handleAllegato = () => {
+    dispatch({ type: 'SET_SCREEN', payload: 'allegato' });
+  };
+
   const handleExportPDF = async () => {
     try {
       await generatePDF(state, punteggiTotali);
@@ -149,7 +153,10 @@ function Verbale() {
       <div className="verbale-actions">
         <button className="btn-back" onClick={handleBack}>← TORNA ALLA PARTITA</button>
         <h2>VERBALE INCONTRO DI PALLANUOTO</h2>
-        <button className="btn-export" onClick={handleExportPDF}>📄 ESPORTA PDF</button>
+        <div className="actions-right">
+          <button className="btn-allegato" onClick={handleAllegato}>📋 ALLEGATO SANZIONI</button>
+          <button className="btn-export" onClick={handleExportPDF}>📄 ESPORTA PDF</button>
+        </div>
       </div>
 
       {/* Contenuto verbale scrollabile */}

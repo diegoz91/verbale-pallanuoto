@@ -5,6 +5,7 @@ import Squadre from './components/Squadre';
 import PartitaLive from './components/PartitaLive';
 import Verbale from './components/Verbale';
 import Giocatori from './components/Giocatori';
+import AllegatoSanzioni from './components/AllegatoSanzioni';
 import './styles/App.css';
 
 function AppContent() {
@@ -22,6 +23,8 @@ function AppContent() {
         return <Verbale />;
       case 'giocatori':
         return <Giocatori />;
+      case 'allegato':
+        return <AllegatoSanzioni />;
       default:
         return <InfoPartita />;
     }

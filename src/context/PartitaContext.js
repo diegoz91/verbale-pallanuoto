@@ -4,8 +4,8 @@ import localforage from 'localforage';
 // Stato iniziale
 const initialState = {
   // Schermata corrente
-  currentScreen: 'info', // 'info', 'squadre', 'partita', 'verbale', 'giocatori'
-  viewingTeam: null, // 'B' o 'N' quando si visualizzano i giocatori
+  currentScreen: 'info',
+  viewingTeam: null,
   
   // Info partita
   infoPartita: {
@@ -80,6 +80,19 @@ const initialState = {
     secondo: { bianco: 0, nero: 0 },
     terzo: { bianco: 0, nero: 0 },
     quarto: { bianco: 0, nero: 0 }
+  },
+
+  // Allegato Sanzioni
+  allegatoSanzioni: {
+    notizieGiustizia: '',
+    forzaPubblica: '',
+    comportamento: '',
+    espulsioni: [
+      { articolo: 'art. 5.4', descrizione: 'oggetti', giocatore: '', squadra: '', motivazione: '' },
+      { articolo: 'art. 5.5', descrizione: 'ungersi il corpo', giocatore: '', squadra: '', motivazione: '' },
+      { articolo: 'art. 21.13', descrizione: 'gioco aggressivo / cattiva condotta', giocatore: '', squadra: '', motivazione: '' },
+      { articolo: 'art. 21.14', descrizione: 'brutalità', giocatore: '', squadra: '', motivazione: '' }
+    ]
   }
 };
 
@@ -257,6 +270,22 @@ function partitaReducer(state, action) {
 
     case 'LOAD_STATE':
       return { ...initialState, ...action.payload };
+
+    case 'UPDATE_ALLEGATO_SANZIONI':
+      return {
+        ...state,
+        allegatoSanzioni: { ...state.allegatoSanzioni, ...action.payload }
+      };
+
+    case 'UPDATE_ESPULSIONE': {
+      const { index, data } = action.payload;
+      const nuoveEspulsioni = [...state.allegatoSanzioni.espulsioni];
+      nuoveEspulsioni[index] = { ...nuoveEspulsioni[index], ...data };
+      return {
+        ...state,
+        allegatoSanzioni: { ...state.allegatoSanzioni, espulsioni: nuoveEspulsioni }
+      };
+    }
 
     default:
       return state;
