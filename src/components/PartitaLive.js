@@ -7,7 +7,8 @@ function PartitaLive() {
   const { timer, selezione, squadraBianca, squadraNera, parziali } = state;
   const timerRef = useRef(null);
 
-  // Gestione timer
+  // --- GESTIONE TIMER ---
+
   const startTimer = useCallback(() => {
     if (timer.pronto && !timer.attivo) {
       dispatch({ type: 'SET_TIMER', payload: { attivo: true, pronto: false } });
@@ -31,7 +32,30 @@ function PartitaLive() {
     });
   }, [dispatch]);
 
-  // 1. handleFineTempo ora è memorizzata con useCallback per evitare re-render infiniti
+  // Modifica tempo manualmente (+/- secondi)
+  const adjustTime = useCallback((secondi) => {
+    const nuovoTempo = Math.max(0, Math.min(480, timer.secondiRimanenti + secondi));
+    dispatch({ 
+      type: 'SET_TIMER', 
+      payload: { secondiRimanenti: nuovoTempo, pronto: nuovoTempo === 480 } 
+    });
+  }, [timer.secondiRimanenti, dispatch]);
+
+  // Seleziona tempo manualmente (cambia quarto e resetta timer)
+  const selectTempo = (tempoNum) => {
+    dispatch({ 
+      type: 'SET_TIMER', 
+      payload: { 
+        tempoCorrente: tempoNum, 
+        secondiRimanenti: 480, 
+        attivo: false, 
+        pronto: true 
+      } 
+    });
+  };
+
+  // --- FINE TEMPO & EFFECT ---
+
   const handleFineTempo = useCallback(() => {
     const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
     alert(`Fine ${timer.tempoCorrente}° Tempo!\n\nParziale: ${parziali[tempoKey].bianco} - ${parziali[tempoKey].nero}\nTotale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
@@ -43,7 +67,6 @@ function PartitaLive() {
     }
   }, [timer.tempoCorrente, parziali, punteggiTotali, dispatch]);
 
-  // 2. Effect per il countdown con dipendenze corrette
   useEffect(() => {
     if (timer.attivo && timer.secondiRimanenti > 0) {
       timerRef.current = setInterval(() => {
@@ -60,19 +83,18 @@ function PartitaLive() {
         clearInterval(timerRef.current);
       }
     };
-  }, [timer.attivo, timer.secondiRimanenti, dispatch, handleFineTempo]); // <--- Aggiunte dipendenze qui
+  }, [timer.attivo, timer.secondiRimanenti, dispatch, handleFineTempo]);
 
-  // Selezione colore
+  // --- GESTIONE EVENTI ---
+
   const selectColore = (colore) => {
     dispatch({ type: 'SET_SELEZIONE', payload: { colore } });
   };
 
-  // Selezione numero
   const selectNumero = (numero) => {
     dispatch({ type: 'SET_SELEZIONE', payload: { numero } });
   };
 
-  // Registra GOL
   const registraGol = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
@@ -98,7 +120,6 @@ function PartitaLive() {
     dispatch({ type: 'CLEAR_SELEZIONE' });
   };
 
-  // Registra ET (Espulsione Temporanea)
   const registraET = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
@@ -138,7 +159,6 @@ function PartitaLive() {
     }
   };
 
-  // Registra TR (Tiro Rigore)
   const registraTR = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
@@ -168,7 +188,6 @@ function PartitaLive() {
     dispatch({ type: 'CLEAR_SELEZIONE' });
   };
 
-  // Timeout
   const registraTimeout = (squadra) => {
     const squadraObj = squadra === 'B' ? squadraBianca : squadraNera;
     if (squadraObj.timeoutUsati >= 2) {
@@ -189,7 +208,8 @@ function PartitaLive() {
     dispatch({ type: 'ADD_EVENTO', payload: { tempo: timer.tempoCorrente, evento } });
   };
 
-  // Navigazione
+  // --- NAVIGAZIONE & RESET ---
+
   const goToVerbale = () => dispatch({ type: 'SET_SCREEN', payload: 'verbale' });
   const goToGiocatori = (team) => {
     dispatch({ type: 'SET_VIEWING_TEAM', payload: team });
@@ -202,7 +222,6 @@ function PartitaLive() {
     }
   };
 
-  // Imposta ora fine partita
   const handleFinePartita = () => {
     const now = new Date();
     const oraTermine = now.toTimeString().slice(0, 5);
@@ -215,7 +234,6 @@ function PartitaLive() {
 
   return (
     <div className="partita-screen">
-      {/* Il resto del tuo JSX rimane identico */}
       <div className="score-header">
         <div className="team-score bianco">
           <span className="team-name">{squadraBianca.nome || 'BIANCO'}</span>
@@ -225,10 +243,35 @@ function PartitaLive() {
           </span>
         </div>
         
+        {/* NUOVA SEZIONE TIMER DISPLAY */}
         <div className="timer-display">
           <div className={`timer ${timer.attivo ? 'running' : ''}`}>
             {formatTempo()}
           </div>
+          
+          {/* Modifica tempo manuale */}
+          {!timer.attivo && (
+            <div className="time-adjust">
+              <button className="btn-adjust" onClick={() => adjustTime(60)}>+1 min</button>
+              <button className="btn-adjust" onClick={() => adjustTime(10)}>+10 sec</button>
+              <button className="btn-adjust" onClick={() => adjustTime(-10)}>-10 sec</button>
+              <button className="btn-adjust" onClick={() => adjustTime(-60)}>-1 min</button>
+            </div>
+          )}
+          
+          {/* Selezione tempo */}
+          <div className="tempo-selector">
+            {[1, 2, 3, 4].map(t => (
+              <button
+                key={t}
+                className={`btn-tempo ${timer.tempoCorrente === t ? 'active' : ''}`}
+                onClick={() => selectTempo(t)}
+              >
+                {t}°T
+              </button>
+            ))}
+          </div>
+          
           <div className="timer-controls">
             {timer.pronto && !timer.attivo && (
               <button className="btn-timer start" onClick={startTimer}>▶ START</button>
