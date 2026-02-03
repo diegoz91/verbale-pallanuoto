@@ -414,3 +414,6 @@
 
 .btn-nav:hover { background: #e5e7eb; }
 .btn-nav.danger { background: #fee2e2; color: #dc2626; }
+
+.btn-nav.fine-partita { background: #10b981; color: white; }
+.btn-nav.fine-partita:hover { background: #059669; }

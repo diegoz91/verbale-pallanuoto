@@ -31,40 +31,6 @@ function PartitaLive() {
     });
   }, [dispatch]);
 
-  // Modifica tempo manualmente (+/- secondi)
-  const adjustTime = useCallback((secondi) => {
-    const nuovoTempo = Math.max(0, Math.min(480, timer.secondiRimanenti + secondi));
-    dispatch({ 
-      type: 'SET_TIMER', 
-      payload: { secondiRimanenti: nuovoTempo, pronto: nuovoTempo === 480 } 
-    });
-  }, [timer.secondiRimanenti, dispatch]);
-
-  // Seleziona tempo manualmente
-  const selectTempo = (tempoNum) => {
-    dispatch({ 
-      type: 'SET_TIMER', 
-      payload: { 
-        tempoCorrente: tempoNum,
-        secondiRimanenti: 480, 
-        attivo: false, 
-        pronto: true 
-      } 
-    });
-  };
-
-  // Gestione fine tempo
-  const handleFineTempo = useCallback(() => {
-    const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
-    alert(`Fine ${timer.tempoCorrente}° Tempo!\n\nParziale: ${parziali[tempoKey].bianco} - ${parziali[tempoKey].nero}\nTotale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
-    
-    if (timer.tempoCorrente < 4) {
-      dispatch({ type: 'NEXT_TEMPO' });
-    } else {
-      alert(`FINE PARTITA!\n\nRisultato Finale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
-    }
-  }, [timer.tempoCorrente, parziali, punteggiTotali, dispatch]);
-
   // Effect per il countdown
   useEffect(() => {
     if (timer.attivo && timer.secondiRimanenti > 0) {
@@ -82,7 +48,18 @@ function PartitaLive() {
         clearInterval(timerRef.current);
       }
     };
-  }, [timer.attivo, timer.secondiRimanenti, dispatch, handleFineTempo]);
+  }, [timer.attivo, timer.secondiRimanenti]);
+
+  const handleFineTempo = () => {
+    const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
+    alert(`Fine ${timer.tempoCorrente}° Tempo!\n\nParziale: ${parziali[tempoKey].bianco} - ${parziali[tempoKey].nero}\nTotale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
+    
+    if (timer.tempoCorrente < 4) {
+      dispatch({ type: 'NEXT_TEMPO' });
+    } else {
+      alert(`FINE PARTITA!\n\nRisultato Finale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
+    }
+  };
 
   // Selezione colore
   const selectColore = (colore) => {
@@ -95,20 +72,9 @@ function PartitaLive() {
   };
 
   // Registra GOL
-// Registra GOL
   const registraGol = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
-      return;
-    }
-
-    // Controlla se il giocatore è espulso (3 falli)
-    const squadra = selezione.colore === 'B' ? squadraBianca : squadraNera;
-    const giocatore = squadra.giocatori.find(g => g.numero === selezione.numero);
-    
-    if (giocatore && giocatore.falliPersonali.length >= 3) {
-      alert(`⛔ Il giocatore ${selezione.numero} è ESPULSO DEFINITIVAMENTE e non può segnare!`);
-      dispatch({ type: 'CLEAR_SELEZIONE' });
       return;
     }
 
@@ -167,26 +133,20 @@ function PartitaLive() {
     dispatch({ type: 'CLEAR_SELEZIONE' });
 
     if (livello === 3) {
-      alert(`⚠️ Attenzione: Giocatore ${selezione.numero} ESPULSO DEFINITIVAMENTE!`);
+      alert(`Attenzione: Giocatore ${selezione.numero} ESPULSO DEFINITIVAMENTE!`);
     }
   };
 
-  // Registra TR (Tiro Rigore) - CONTA COME FALLO GRAVE
+  // Registra TR (Tiro Rigore)
   const registraTR = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
       return;
     }
 
+    const tempo = formatTempo();
     const squadra = selezione.colore === 'B' ? squadraBianca : squadraNera;
     const giocatore = squadra.giocatori.find(g => g.numero === selezione.numero);
-    
-    if (giocatore && giocatore.falliPersonali.length >= 3) {
-      alert('Il giocatore ha già raggiunto il massimo di 3 falli!');
-      return;
-    }
-
-    const tempo = formatTempo();
     const livello = giocatore ? giocatore.falliPersonali.length + 1 : 1;
     
     const fallo = { tempo, tipo: 'TR', livello };
@@ -205,11 +165,6 @@ function PartitaLive() {
     };
     dispatch({ type: 'ADD_EVENTO', payload: { tempo: timer.tempoCorrente, evento } });
     dispatch({ type: 'CLEAR_SELEZIONE' });
-
-    // TR conta come fallo grave - se è il 3° fallo, espulsione definitiva
-    if (livello === 3) {
-      alert(`⚠️ Attenzione: Giocatore ${selezione.numero} ESPULSO DEFINITIVAMENTE!`);
-    }
   };
 
   // Timeout
@@ -246,6 +201,17 @@ function PartitaLive() {
     }
   };
 
+  // Imposta ora fine partita
+  const handleFinePartita = () => {
+    const now = new Date();
+    const oraTermine = now.toTimeString().slice(0, 5);
+    dispatch({ 
+      type: 'UPDATE_INFO_PARTITA', 
+      payload: { oraTermine } 
+    });
+    alert(`Ora termine impostata: ${oraTermine}`);
+  };
+
   return (
     <div className="partita-screen">
       {/* Header con punteggio */}
@@ -262,30 +228,6 @@ function PartitaLive() {
           <div className={`timer ${timer.attivo ? 'running' : ''}`}>
             {formatTempo()}
           </div>
-          
-          {/* Modifica tempo manuale */}
-          {!timer.attivo && (
-            <div className="time-adjust">
-              <button className="btn-adjust" onClick={() => adjustTime(60)}>+1 min</button>
-              <button className="btn-adjust" onClick={() => adjustTime(10)}>+10 sec</button>
-              <button className="btn-adjust" onClick={() => adjustTime(-10)}>-10 sec</button>
-              <button className="btn-adjust" onClick={() => adjustTime(-60)}>-1 min</button>
-            </div>
-          )}
-          
-          {/* Selezione tempo */}
-          <div className="tempo-selector">
-            {[1, 2, 3, 4].map(t => (
-              <button
-                key={t}
-                className={`btn-tempo ${timer.tempoCorrente === t ? 'active' : ''}`}
-                onClick={() => selectTempo(t)}
-              >
-                {t}°T
-              </button>
-            ))}
-          </div>
-          
           <div className="timer-controls">
             {timer.pronto && !timer.attivo && (
               <button className="btn-timer start" onClick={startTimer}>▶ START</button>
@@ -382,9 +324,10 @@ function PartitaLive() {
 
       {/* Navigazione */}
       <div className="nav-footer">
+        <button className="btn-nav fine-partita" onClick={handleFinePartita}>🏁 FINE PARTITA</button>
         <button className="btn-nav" onClick={goToVerbale}>📄 VERBALE</button>
-        <button className="btn-nav" onClick={() => goToGiocatori('B')}>👥 GIOCATORI B</button>
-        <button className="btn-nav" onClick={() => goToGiocatori('N')}>👥 GIOCATORI N</button>
+        <button className="btn-nav" onClick={() => goToGiocatori('B')}>👥 GIOC. B</button>
+        <button className="btn-nav" onClick={() => goToGiocatori('N')}>👥 GIOC. N</button>
         <button className="btn-nav danger" onClick={handleReset}>🔄 RESET</button>
       </div>
     </div>
