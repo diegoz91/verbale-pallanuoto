@@ -31,7 +31,19 @@ function PartitaLive() {
     });
   }, [dispatch]);
 
-  // Effect per il countdown
+  // 1. handleFineTempo ora è memorizzata con useCallback per evitare re-render infiniti
+  const handleFineTempo = useCallback(() => {
+    const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
+    alert(`Fine ${timer.tempoCorrente}° Tempo!\n\nParziale: ${parziali[tempoKey].bianco} - ${parziali[tempoKey].nero}\nTotale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
+    
+    if (timer.tempoCorrente < 4) {
+      dispatch({ type: 'NEXT_TEMPO' });
+    } else {
+      alert(`FINE PARTITA!\n\nRisultato Finale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
+    }
+  }, [timer.tempoCorrente, parziali, punteggiTotali, dispatch]);
+
+  // 2. Effect per il countdown con dipendenze corrette
   useEffect(() => {
     if (timer.attivo && timer.secondiRimanenti > 0) {
       timerRef.current = setInterval(() => {
@@ -48,18 +60,7 @@ function PartitaLive() {
         clearInterval(timerRef.current);
       }
     };
-  }, [timer.attivo, timer.secondiRimanenti]);
-
-  const handleFineTempo = () => {
-    const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
-    alert(`Fine ${timer.tempoCorrente}° Tempo!\n\nParziale: ${parziali[tempoKey].bianco} - ${parziali[tempoKey].nero}\nTotale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
-    
-    if (timer.tempoCorrente < 4) {
-      dispatch({ type: 'NEXT_TEMPO' });
-    } else {
-      alert(`FINE PARTITA!\n\nRisultato Finale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
-    }
-  };
+  }, [timer.attivo, timer.secondiRimanenti, dispatch, handleFineTempo]); // <--- Aggiunte dipendenze qui
 
   // Selezione colore
   const selectColore = (colore) => {
@@ -214,7 +215,7 @@ function PartitaLive() {
 
   return (
     <div className="partita-screen">
-      {/* Header con punteggio */}
+      {/* Il resto del tuo JSX rimane identico */}
       <div className="score-header">
         <div className="team-score bianco">
           <span className="team-name">{squadraBianca.nome || 'BIANCO'}</span>
@@ -251,9 +252,7 @@ function PartitaLive() {
         </div>
       </div>
 
-      {/* Area centrale */}
       <div className="main-area">
-        {/* Selezione squadra */}
         <div className="selection-area">
           <h3>SQUADRA</h3>
           <div className="team-buttons">
@@ -272,7 +271,6 @@ function PartitaLive() {
           </div>
         </div>
 
-        {/* Selezione numero */}
         <div className="number-area">
           <h3>NUMERO GIOCATORE</h3>
           <div className="number-grid">
@@ -288,7 +286,6 @@ function PartitaLive() {
           </div>
         </div>
 
-        {/* Pulsanti eventi */}
         <div className="events-area">
           <h3>EVENTI</h3>
           <div className="event-buttons">
@@ -313,7 +310,6 @@ function PartitaLive() {
         </div>
       </div>
 
-      {/* Selezione corrente */}
       {(selezione.colore || selezione.numero) && (
         <div className="current-selection">
           Selezionato: {selezione.colore === 'B' ? 'BIANCO' : selezione.colore === 'N' ? 'NERO' : '?'} 
@@ -322,7 +318,6 @@ function PartitaLive() {
         </div>
       )}
 
-      {/* Navigazione */}
       <div className="nav-footer">
         <button className="btn-nav fine-partita" onClick={handleFinePartita}>🏁 FINE PARTITA</button>
         <button className="btn-nav" onClick={goToVerbale}>📄 VERBALE</button>
