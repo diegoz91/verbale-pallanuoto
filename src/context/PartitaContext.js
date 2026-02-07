@@ -173,6 +173,20 @@ function partitaReducer(state, action) {
       };
     }
 
+    // Rimuovi evento specifico
+    case 'REMOVE_EVENTO': {
+      const { tempoKey, index } = action.payload;
+      const nuoviEventi = [...state.eventi[tempoKey]];
+      nuoviEventi.splice(index, 1);
+      return {
+        ...state,
+        eventi: {
+          ...state.eventi,
+          [tempoKey]: nuoviEventi
+        }
+      };
+    }
+
     case 'UPDATE_PARZIALE': {
       const { tempo, bianco, nero } = action.payload;
       const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][tempo - 1];
@@ -201,6 +215,23 @@ function partitaReducer(state, action) {
       };
     }
 
+    // Decrementa punteggio
+    case 'DECREMENT_PUNTEGGIO': {
+      const { squadra, tempo } = action.payload;
+      const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][tempo - 1];
+      const campo = squadra === 'B' ? 'bianco' : 'nero';
+      return {
+        ...state,
+        parziali: {
+          ...state.parziali,
+          [tempoKey]: {
+            ...state.parziali[tempoKey],
+            [campo]: Math.max(0, state.parziali[tempoKey][campo] - 1)
+          }
+        }
+      };
+    }
+
     case 'INCREMENT_TIMEOUT': {
       const squadraKey = action.payload === 'B' ? 'squadraBianca' : 'squadraNera';
       return {
@@ -208,6 +239,18 @@ function partitaReducer(state, action) {
         [squadraKey]: {
           ...state[squadraKey],
           timeoutUsati: state[squadraKey].timeoutUsati + 1
+        }
+      };
+    }
+
+    // Decrementa timeout
+    case 'DECREMENT_TIMEOUT': {
+      const squadraKey = action.payload === 'B' ? 'squadraBianca' : 'squadraNera';
+      return {
+        ...state,
+        [squadraKey]: {
+          ...state[squadraKey],
+          timeoutUsati: Math.max(0, state[squadraKey].timeoutUsati - 1)
         }
       };
     }
@@ -231,6 +274,28 @@ function partitaReducer(state, action) {
       };
     }
 
+    // Rimuovi ultimo fallo giocatore
+    case 'REMOVE_LAST_FALLO_GIOCATORE': {
+      const { squadra, numeroGiocatore } = action.payload;
+      const squadraKey = squadra === 'B' ? 'squadraBianca' : 'squadraNera';
+      const giocatoreIndex = state[squadraKey].giocatori.findIndex(
+        g => g.numero === parseInt(numeroGiocatore)
+      );
+      if (giocatoreIndex === -1) return state;
+      
+      const nuoviGiocatori = [...state[squadraKey].giocatori];
+      const falliAttuali = [...nuoviGiocatori[giocatoreIndex].falliPersonali];
+      falliAttuali.pop();
+      nuoviGiocatori[giocatoreIndex] = {
+        ...nuoviGiocatori[giocatoreIndex],
+        falliPersonali: falliAttuali
+      };
+      return {
+        ...state,
+        [squadraKey]: { ...state[squadraKey], giocatori: nuoviGiocatori }
+      };
+    }
+
     case 'INCREMENT_RETI_GIOCATORE': {
       const { squadra, numeroGiocatore, tempo } = action.payload;
       const squadraKey = squadra === 'B' ? 'squadraBianca' : 'squadraNera';
@@ -246,6 +311,30 @@ function partitaReducer(state, action) {
         reti: {
           ...nuoviGiocatori[giocatoreIndex].reti,
           [tempoKey]: nuoviGiocatori[giocatoreIndex].reti[tempoKey] + 1
+        }
+      };
+      return {
+        ...state,
+        [squadraKey]: { ...state[squadraKey], giocatori: nuoviGiocatori }
+      };
+    }
+
+    // Decrementa reti giocatore
+    case 'DECREMENT_RETI_GIOCATORE': {
+      const { squadra, numeroGiocatore, tempo } = action.payload;
+      const squadraKey = squadra === 'B' ? 'squadraBianca' : 'squadraNera';
+      const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][tempo - 1];
+      const giocatoreIndex = state[squadraKey].giocatori.findIndex(
+        g => g.numero === parseInt(numeroGiocatore)
+      );
+      if (giocatoreIndex === -1) return state;
+      
+      const nuoviGiocatori = [...state[squadraKey].giocatori];
+      nuoviGiocatori[giocatoreIndex] = {
+        ...nuoviGiocatori[giocatoreIndex],
+        reti: {
+          ...nuoviGiocatori[giocatoreIndex].reti,
+          [tempoKey]: Math.max(0, nuoviGiocatori[giocatoreIndex].reti[tempoKey] - 1)
         }
       };
       return {

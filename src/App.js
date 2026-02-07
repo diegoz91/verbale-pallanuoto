@@ -6,6 +6,7 @@ import PartitaLive from './components/PartitaLive';
 import Verbale from './components/Verbale';
 import Giocatori from './components/Giocatori';
 import AllegatoSanzioni from './components/AllegatoSanzioni';
+import GestioneEventi from './components/GestioneEventi';
 import './styles/App.css';
 
 function AppContent() {
@@ -25,6 +26,8 @@ function AppContent() {
         return <Giocatori />;
       case 'allegato':
         return <AllegatoSanzioni />;
+      case 'gestione-eventi':
+        return <GestioneEventi />;
       default:
         return <InfoPartita />;
     }

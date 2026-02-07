@@ -7,8 +7,7 @@ function PartitaLive() {
   const { timer, selezione, squadraBianca, squadraNera, parziali } = state;
   const timerRef = useRef(null);
 
-  // --- GESTIONE TIMER ---
-
+  // Gestione timer
   const startTimer = useCallback(() => {
     if (timer.pronto && !timer.attivo) {
       dispatch({ type: 'SET_TIMER', payload: { attivo: true, pronto: false } });
@@ -32,48 +31,26 @@ function PartitaLive() {
     });
   }, [dispatch]);
 
-  // Modifica tempo manualmente (+/- secondi)
-  const adjustTime = useCallback((secondi) => {
-    const nuovoTempo = Math.max(0, Math.min(480, timer.secondiRimanenti + secondi));
-    dispatch({ 
-      type: 'SET_TIMER', 
-      payload: { secondiRimanenti: nuovoTempo, pronto: nuovoTempo === 480 } 
-    });
-  }, [timer.secondiRimanenti, dispatch]);
-
-  // Seleziona tempo manualmente (cambia quarto e resetta timer)
-  const selectTempo = (tempoNum) => {
-    dispatch({ 
-      type: 'SET_TIMER', 
-      payload: { 
-        tempoCorrente: tempoNum, 
-        secondiRimanenti: 480, 
-        attivo: false, 
-        pronto: true 
-      } 
-    });
+  // Modifica tempo manualmente
+  const modificaTempo = (secondiDelta) => {
+    if (timer.attivo) return; // Non modificare mentre il timer è attivo
+    const nuovoTempo = Math.max(0, Math.min(599, timer.secondiRimanenti + secondiDelta));
+    dispatch({ type: 'SET_TIMER', payload: { secondiRimanenti: nuovoTempo, pronto: false } });
   };
 
-  // --- FINE TEMPO & EFFECT ---
+  // Cambia tempo di gioco (1°, 2°, 3°, 4°)
+  const cambiaTempo = (nuovoTempo) => {
+    if (timer.attivo) return;
+    dispatch({ type: 'SET_TIMER', payload: { tempoCorrente: nuovoTempo } });
+  };
 
-  const handleFineTempo = useCallback(() => {
-    const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
-    alert(`Fine ${timer.tempoCorrente}° Tempo!\n\nParziale: ${parziali[tempoKey].bianco} - ${parziali[tempoKey].nero}\nTotale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
-    
-    if (timer.tempoCorrente < 4) {
-      dispatch({ type: 'NEXT_TEMPO' });
-    } else {
-      alert(`FINE PARTITA!\n\nRisultato Finale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
-    }
-  }, [timer.tempoCorrente, parziali, punteggiTotali, dispatch]);
-
+  // Effect per il countdown
   useEffect(() => {
     if (timer.attivo && timer.secondiRimanenti > 0) {
       timerRef.current = setInterval(() => {
         dispatch({ type: 'TICK_TIMER' });
       }, 1000);
     } else if (timer.secondiRimanenti === 0 && timer.attivo) {
-      // Fine tempo
       dispatch({ type: 'SET_TIMER', payload: { attivo: false } });
       handleFineTempo();
     }
@@ -83,18 +60,30 @@ function PartitaLive() {
         clearInterval(timerRef.current);
       }
     };
-  }, [timer.attivo, timer.secondiRimanenti, dispatch, handleFineTempo]);
+  }, [timer.attivo, timer.secondiRimanenti]);
 
-  // --- GESTIONE EVENTI ---
+  const handleFineTempo = () => {
+    const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
+    alert(`Fine ${timer.tempoCorrente}° Tempo!\n\nParziale: ${parziali[tempoKey].bianco} - ${parziali[tempoKey].nero}\nTotale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
+    
+    if (timer.tempoCorrente < 4) {
+      dispatch({ type: 'NEXT_TEMPO' });
+    } else {
+      alert(`FINE PARTITA!\n\nRisultato Finale: ${punteggiTotali.bianco} - ${punteggiTotali.nero}`);
+    }
+  };
 
+  // Selezione colore
   const selectColore = (colore) => {
     dispatch({ type: 'SET_SELEZIONE', payload: { colore } });
   };
 
+  // Selezione numero
   const selectNumero = (numero) => {
     dispatch({ type: 'SET_SELEZIONE', payload: { numero } });
   };
 
+  // Registra GOL
   const registraGol = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
@@ -120,6 +109,7 @@ function PartitaLive() {
     dispatch({ type: 'CLEAR_SELEZIONE' });
   };
 
+  // Registra ET (Espulsione Temporanea)
   const registraET = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
@@ -159,6 +149,7 @@ function PartitaLive() {
     }
   };
 
+  // Registra TR (Tiro Rigore)
   const registraTR = () => {
     if (!selezione.colore || !selezione.numero) {
       alert('Seleziona prima squadra e numero giocatore!');
@@ -188,6 +179,7 @@ function PartitaLive() {
     dispatch({ type: 'CLEAR_SELEZIONE' });
   };
 
+  // Timeout
   const registraTimeout = (squadra) => {
     const squadraObj = squadra === 'B' ? squadraBianca : squadraNera;
     if (squadraObj.timeoutUsati >= 2) {
@@ -208,8 +200,7 @@ function PartitaLive() {
     dispatch({ type: 'ADD_EVENTO', payload: { tempo: timer.tempoCorrente, evento } });
   };
 
-  // --- NAVIGAZIONE & RESET ---
-
+  // Navigazione
   const goToVerbale = () => dispatch({ type: 'SET_SCREEN', payload: 'verbale' });
   const goToGiocatori = (team) => {
     dispatch({ type: 'SET_VIEWING_TEAM', payload: team });
@@ -222,6 +213,7 @@ function PartitaLive() {
     }
   };
 
+  // Imposta ora fine partita
   const handleFinePartita = () => {
     const now = new Date();
     const oraTermine = now.toTimeString().slice(0, 5);
@@ -232,8 +224,18 @@ function PartitaLive() {
     alert(`Ora termine impostata: ${oraTermine}`);
   };
 
+  // Vai a gestione eventi per correggere errori
+  const goToGestioneEventi = () => {
+    dispatch({ type: 'SET_SCREEN', payload: 'gestione-eventi' });
+  };
+
+  // Formatta minuti e secondi separatamente
+  const minuti = Math.floor(timer.secondiRimanenti / 60);
+  const secondi = timer.secondiRimanenti % 60;
+
   return (
     <div className="partita-screen">
+      {/* Header con punteggio */}
       <div className="score-header">
         <div className="team-score bianco">
           <span className="team-name">{squadraBianca.nome || 'BIANCO'}</span>
@@ -243,35 +245,52 @@ function PartitaLive() {
           </span>
         </div>
         
-        {/* NUOVA SEZIONE TIMER DISPLAY */}
         <div className="timer-display">
-          <div className={`timer ${timer.attivo ? 'running' : ''}`}>
-            {formatTempo()}
-          </div>
-          
-          {/* Modifica tempo manuale */}
-          {!timer.attivo && (
-            <div className="time-adjust">
-              <button className="btn-adjust" onClick={() => adjustTime(60)}>+1 min</button>
-              <button className="btn-adjust" onClick={() => adjustTime(10)}>+10 sec</button>
-              <button className="btn-adjust" onClick={() => adjustTime(-10)}>-10 sec</button>
-              <button className="btn-adjust" onClick={() => adjustTime(-60)}>-1 min</button>
-            </div>
-          )}
-          
-          {/* Selezione tempo */}
+          {/* Selezione tempo di gioco */}
           <div className="tempo-selector">
             {[1, 2, 3, 4].map(t => (
               <button
                 key={t}
                 className={`btn-tempo ${timer.tempoCorrente === t ? 'active' : ''}`}
-                onClick={() => selectTempo(t)}
+                onClick={() => cambiaTempo(t)}
+                disabled={timer.attivo}
               >
-                {t}°T
+                {t}°
               </button>
             ))}
           </div>
-          
+
+          {/* Timer con controlli +/- */}
+          <div className="timer-edit">
+            <div className="timer-unit">
+              <button 
+                className="btn-adjust" 
+                onClick={() => modificaTempo(60)} 
+                disabled={timer.attivo}
+              >+</button>
+              <span className="timer-value">{String(minuti).padStart(2, '0')}</span>
+              <button 
+                className="btn-adjust" 
+                onClick={() => modificaTempo(-60)} 
+                disabled={timer.attivo}
+              >-</button>
+            </div>
+            <span className="timer-separator">:</span>
+            <div className="timer-unit">
+              <button 
+                className="btn-adjust" 
+                onClick={() => modificaTempo(1)} 
+                disabled={timer.attivo}
+              >+</button>
+              <span className="timer-value">{String(secondi).padStart(2, '0')}</span>
+              <button 
+                className="btn-adjust" 
+                onClick={() => modificaTempo(-1)} 
+                disabled={timer.attivo}
+              >-</button>
+            </div>
+          </div>
+
           <div className="timer-controls">
             {timer.pronto && !timer.attivo && (
               <button className="btn-timer start" onClick={startTimer}>▶ START</button>
@@ -295,7 +314,9 @@ function PartitaLive() {
         </div>
       </div>
 
+      {/* Area centrale */}
       <div className="main-area">
+        {/* Selezione squadra */}
         <div className="selection-area">
           <h3>SQUADRA</h3>
           <div className="team-buttons">
@@ -314,6 +335,7 @@ function PartitaLive() {
           </div>
         </div>
 
+        {/* Selezione numero */}
         <div className="number-area">
           <h3>NUMERO GIOCATORE</h3>
           <div className="number-grid">
@@ -329,6 +351,7 @@ function PartitaLive() {
           </div>
         </div>
 
+        {/* Pulsanti eventi */}
         <div className="events-area">
           <h3>EVENTI</h3>
           <div className="event-buttons">
@@ -353,6 +376,7 @@ function PartitaLive() {
         </div>
       </div>
 
+      {/* Selezione corrente */}
       {(selezione.colore || selezione.numero) && (
         <div className="current-selection">
           Selezionato: {selezione.colore === 'B' ? 'BIANCO' : selezione.colore === 'N' ? 'NERO' : '?'} 
@@ -361,12 +385,14 @@ function PartitaLive() {
         </div>
       )}
 
+      {/* Navigazione */}
       <div className="nav-footer">
-        <button className="btn-nav fine-partita" onClick={handleFinePartita}>🏁 FINE PARTITA</button>
+        <button className="btn-nav fine-partita" onClick={handleFinePartita}>🏁 FINE</button>
+        <button className="btn-nav correggi" onClick={goToGestioneEventi}>✏️ CORREGGI</button>
         <button className="btn-nav" onClick={goToVerbale}>📄 VERBALE</button>
-        <button className="btn-nav" onClick={() => goToGiocatori('B')}>👥 GIOC. B</button>
-        <button className="btn-nav" onClick={() => goToGiocatori('N')}>👥 GIOC. N</button>
-        <button className="btn-nav danger" onClick={handleReset}>🔄 RESET</button>
+        <button className="btn-nav" onClick={() => goToGiocatori('B')}>👥 B</button>
+        <button className="btn-nav" onClick={() => goToGiocatori('N')}>👥 N</button>
+        <button className="btn-nav danger" onClick={handleReset}>🔄</button>
       </div>
     </div>
   );
