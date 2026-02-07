@@ -44,7 +44,7 @@ function PartitaLive() {
     dispatch({ type: 'SET_TIMER', payload: { tempoCorrente: nuovoTempo } });
   };
 
-  // Effect per il countdown
+ // Effect per il countdown
   useEffect(() => {
     if (timer.attivo && timer.secondiRimanenti > 0) {
       timerRef.current = setInterval(() => {
@@ -60,6 +60,7 @@ function PartitaLive() {
         clearInterval(timerRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timer.attivo, timer.secondiRimanenti]);
 
   const handleFineTempo = () => {
