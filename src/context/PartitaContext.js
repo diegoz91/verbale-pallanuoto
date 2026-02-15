@@ -60,6 +60,12 @@ const initialState = {
     pronto: true
   },
 
+  // Timer 28 secondi (possesso)
+  timer28: {
+    secondiRimanenti: 28,
+    attivo: false
+  },
+
   // Selezione corrente
   selezione: {
     colore: null,
@@ -148,6 +154,33 @@ function partitaReducer(state, action) {
           secondiRimanenti: Math.max(0, state.timer.secondiRimanenti - 1)
         }
       };
+
+    // Timer 28 secondi
+    case 'SET_TIMER_28':
+      return { 
+        ...state, 
+        timer28: { ...state.timer28, ...action.payload }
+      };
+
+    case 'TICK_TIMER_28':
+      return {
+        ...state,
+        timer28: {
+          ...state.timer28,
+          secondiRimanenti: Math.max(0, state.timer28.secondiRimanenti - 1)
+        }
+      };
+
+    case 'RESET_TIMER_28': {
+      const secondi = action.payload || 28;
+      return {
+        ...state,
+        timer28: {
+          secondiRimanenti: secondi,
+          attivo: state.timer.attivo
+        }
+      };
+    }
 
     case 'SET_SELEZIONE':
       return { 
@@ -351,6 +384,10 @@ function partitaReducer(state, action) {
           secondiRimanenti: 480,
           attivo: false,
           pronto: true
+        },
+        timer28: {
+          secondiRimanenti: 28,
+          attivo: false
         }
       };
 
