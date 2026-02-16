@@ -330,103 +330,69 @@ function PartitaLive() {
           </span>
         </div>
 
-        <div className="timer-container">
-          {/* Timer 28 secondi */}
-          <div className="timer28-section">
-            <div
-              className={`timer28-display ${secondi28 <= 5 ? "warning" : ""} ${secondi28 === 0 ? "expired" : ""}`}
-            >
-              {secondi28}
-            </div>
-            <div className="timer28-buttons">
-              <button className="btn-timer28" onClick={() => resetTimer28(28)}>
-                28
-              </button>
-              <button className="btn-timer28" onClick={() => resetTimer28(18)}>
-                18
-              </button>
-            </div>
-          </div>
+<div className="timer-container">
+  {/* Timer 28 secondi */}
+  <div className="timer28-section">
+    <span className="timer28-label">Possesso</span>
+    <div className={`timer28-display ${secondi28 <= 5 ? 'warning' : ''} ${secondi28 === 0 ? 'expired' : ''}`}>
+      {secondi28}
+    </div>
+    <div className="timer28-buttons">
+      <button className="btn-timer28" onClick={() => resetTimer28(28)}>28</button>
+      <button className="btn-timer28" onClick={() => resetTimer28(18)}>18</button>
+    </div>
+  </div>
 
-          {/* Timer principale */}
-          <div className="timer-display">
-            <div className="tempo-selector">
-              {[1, 2, 3, 4].map((t) => (
-                <button
-                  key={t}
-                  className={`btn-tempo ${timer.tempoCorrente === t ? "active" : ""}`}
-                  onClick={() => cambiaTempo(t)}
-                  disabled={timer.attivo}
-                >
-                  {t}°
-                </button>
-              ))}
-            </div>
+  {/* Separatore */}
+  <div className="timer-divider"></div>
 
-            <div className="timer-edit">
-              <div className="timer-unit">
-                <button
-                  className="btn-adjust"
-                  onClick={() => modificaTempo(60)}
-                  disabled={timer.attivo}
-                >
-                  +
-                </button>
-                <span className="timer-value">
-                  {String(minuti).padStart(2, "0")}
-                </span>
-                <button
-                  className="btn-adjust"
-                  onClick={() => modificaTempo(-60)}
-                  disabled={timer.attivo}
-                >
-                  -
-                </button>
-              </div>
-              <span className="timer-separator">:</span>
-              <div className="timer-unit">
-                <button
-                  className="btn-adjust"
-                  onClick={() => modificaTempo(1)}
-                  disabled={timer.attivo}
-                >
-                  +
-                </button>
-                <span className="timer-value">
-                  {String(secondi).padStart(2, "0")}
-                </span>
-                <button
-                  className="btn-adjust"
-                  onClick={() => modificaTempo(-1)}
-                  disabled={timer.attivo}
-                >
-                  -
-                </button>
-              </div>
-            </div>
+  {/* Timer principale */}
+  <div className="timer-main-section">
+    <div className="tempo-selector">
+      {[1, 2, 3, 4].map(t => (
+        <button
+          key={t}
+          className={`btn-tempo ${timer.tempoCorrente === t ? 'active' : ''}`}
+          onClick={() => cambiaTempo(t)}
+          disabled={timer.attivo}
+        >
+          {t}°
+        </button>
+      ))}
+    </div>
 
-            <div className="timer-controls">
-              {timer.pronto && !timer.attivo && (
-                <button className="btn-timer start" onClick={startTimer}>
-                  ▶ START
-                </button>
-              )}
-              {timer.attivo && (
-                <button className="btn-timer pause" onClick={pauseTimer}>
-                  ⏸ PAUSA
-                </button>
-              )}
-              {!timer.attivo && !timer.pronto && timer.secondiRimanenti > 0 && (
-                <button className="btn-timer resume" onClick={resumeTimer}>
-                  ▶ RIPRENDI
-                </button>
-              )}
-              <button className="btn-timer reset" onClick={resetTimer}>
-                ↺ RESET
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="timer-edit">
+      <div className="timer-unit">
+        <button className="btn-adjust" onClick={() => modificaTempo(60)} disabled={timer.attivo}>+</button>
+        <span className="timer-value">{String(minuti).padStart(2, '0')}</span>
+        <button className="btn-adjust" onClick={() => modificaTempo(-60)} disabled={timer.attivo}>-</button>
+      </div>
+      <span className="timer-separator">:</span>
+      <div className="timer-unit">
+        <button className="btn-adjust" onClick={() => modificaTempo(1)} disabled={timer.attivo}>+</button>
+        <span className="timer-value">{String(secondi).padStart(2, '0')}</span>
+        <button className="btn-adjust" onClick={() => modificaTempo(-1)} disabled={timer.attivo}>-</button>
+      </div>
+    </div>
+  </div>
+
+  {/* Separatore */}
+  <div className="timer-divider"></div>
+
+  {/* Bottoni START/RESET a destra */}
+  <div className="timer-controls-section">
+    {timer.pronto && !timer.attivo && (
+      <button className="btn-timer-big start" onClick={startTimer}>▶<br/>START</button>
+    )}
+    {timer.attivo && (
+      <button className="btn-timer-big pause" onClick={pauseTimer}>⏸<br/>PAUSA</button>
+    )}
+    {!timer.attivo && !timer.pronto && timer.secondiRimanenti > 0 && (
+      <button className="btn-timer-big resume" onClick={resumeTimer}>▶<br/>RIPRENDI</button>
+    )}
+    <button className="btn-timer-big reset" onClick={resetTimer}>↺<br/>RESET</button>
+  </div>
+</div>
 
         <div className="team-score nero">
           <span className="team-name">{squadraNera.nome || "NERO"}</span>
