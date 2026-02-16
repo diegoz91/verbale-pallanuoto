@@ -60,6 +60,8 @@ function Squadre() {
             />
             <input
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="col-tessera"
               placeholder="1234567"
               maxLength="7"

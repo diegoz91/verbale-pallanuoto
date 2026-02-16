@@ -4,23 +4,27 @@ import '../styles/PartitaLive.css';
 
 function PartitaLive() {
   const { state, dispatch, punteggiTotali, formatTempo } = usePartita();
-  const { timer, selezione, squadraBianca, squadraNera, parziali } = state;
+  const { timer, timer28, selezione, squadraBianca, squadraNera, parziali } = state;
   const timerRef = useRef(null);
+  const timer28Ref = useRef(null);
 
-  // Gestione timer
+  // Gestione timer principale
   const startTimer = useCallback(() => {
     if (timer.pronto && !timer.attivo) {
       dispatch({ type: 'SET_TIMER', payload: { attivo: true, pronto: false } });
+      dispatch({ type: 'SET_TIMER_28', payload: { attivo: true } });
     }
   }, [timer.pronto, timer.attivo, dispatch]);
 
   const pauseTimer = useCallback(() => {
     dispatch({ type: 'SET_TIMER', payload: { attivo: false } });
+    dispatch({ type: 'SET_TIMER_28', payload: { attivo: false } });
   }, [dispatch]);
 
   const resumeTimer = useCallback(() => {
     if (!timer.attivo && timer.secondiRimanenti > 0) {
       dispatch({ type: 'SET_TIMER', payload: { attivo: true } });
+      dispatch({ type: 'SET_TIMER_28', payload: { attivo: true } });
     }
   }, [timer.attivo, timer.secondiRimanenti, dispatch]);
 
@@ -29,11 +33,12 @@ function PartitaLive() {
       type: 'SET_TIMER', 
       payload: { secondiRimanenti: 480, attivo: false, pronto: true } 
     });
+    dispatch({ type: 'RESET_TIMER_28', payload: 28 });
   }, [dispatch]);
 
   // Modifica tempo manualmente
   const modificaTempo = (secondiDelta) => {
-    if (timer.attivo) return; // Non modificare mentre il timer è attivo
+    if (timer.attivo) return;
     const nuovoTempo = Math.max(0, Math.min(599, timer.secondiRimanenti + secondiDelta));
     dispatch({ type: 'SET_TIMER', payload: { secondiRimanenti: nuovoTempo, pronto: false } });
   };
@@ -44,7 +49,12 @@ function PartitaLive() {
     dispatch({ type: 'SET_TIMER', payload: { tempoCorrente: nuovoTempo } });
   };
 
- // Effect per il countdown
+  // Reset timer 28 secondi
+  const resetTimer28 = (secondi) => {
+    dispatch({ type: 'RESET_TIMER_28', payload: secondi });
+  };
+
+  // Effect per il countdown principale
   useEffect(() => {
     if (timer.attivo && timer.secondiRimanenti > 0) {
       timerRef.current = setInterval(() => {
@@ -52,6 +62,7 @@ function PartitaLive() {
       }, 1000);
     } else if (timer.secondiRimanenti === 0 && timer.attivo) {
       dispatch({ type: 'SET_TIMER', payload: { attivo: false } });
+      dispatch({ type: 'SET_TIMER_28', payload: { attivo: false } });
       handleFineTempo();
     }
 
@@ -62,6 +73,22 @@ function PartitaLive() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timer.attivo, timer.secondiRimanenti]);
+
+  // Effect per il countdown 28 secondi
+  useEffect(() => {
+    if (timer28 && timer28.attivo && timer28.secondiRimanenti > 0) {
+      timer28Ref.current = setInterval(() => {
+        dispatch({ type: 'TICK_TIMER_28' });
+      }, 1000);
+    }
+
+    return () => {
+      if (timer28Ref.current) {
+        clearInterval(timer28Ref.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timer28?.attivo, timer28?.secondiRimanenti]);
 
   const handleFineTempo = () => {
     const tempoKey = ['primo', 'secondo', 'terzo', 'quarto'][timer.tempoCorrente - 1];
@@ -108,6 +135,9 @@ function PartitaLive() {
       tempo: timer.tempoCorrente 
     }});
     dispatch({ type: 'CLEAR_SELEZIONE' });
+    
+    // Reset timer 28 dopo gol
+    resetTimer28(28);
   };
 
   // Registra ET (Espulsione Temporanea)
@@ -234,9 +264,12 @@ function PartitaLive() {
   const minuti = Math.floor(timer.secondiRimanenti / 60);
   const secondi = timer.secondiRimanenti % 60;
 
+  // Timer 28 secondi (con fallback se non esiste ancora)
+  const secondi28 = timer28 ? timer28.secondiRimanenti : 28;
+
   return (
     <div className="partita-screen">
-      {/* Header con punteggio */}
+      {/* Header con punteggio e timer 28 */}
       <div className="score-header">
         <div className="team-score bianco">
           <span className="team-name">{squadraBianca.nome || 'BIANCO'}</span>
@@ -246,63 +279,59 @@ function PartitaLive() {
           </span>
         </div>
         
-        <div className="timer-display">
-          {/* Selezione tempo di gioco */}
-          <div className="tempo-selector">
-            {[1, 2, 3, 4].map(t => (
-              <button
-                key={t}
-                className={`btn-tempo ${timer.tempoCorrente === t ? 'active' : ''}`}
-                onClick={() => cambiaTempo(t)}
-                disabled={timer.attivo}
-              >
-                {t}°
-              </button>
-            ))}
-          </div>
-
-          {/* Timer con controlli +/- */}
-          <div className="timer-edit">
-            <div className="timer-unit">
-              <button 
-                className="btn-adjust" 
-                onClick={() => modificaTempo(60)} 
-                disabled={timer.attivo}
-              >+</button>
-              <span className="timer-value">{String(minuti).padStart(2, '0')}</span>
-              <button 
-                className="btn-adjust" 
-                onClick={() => modificaTempo(-60)} 
-                disabled={timer.attivo}
-              >-</button>
+        <div className="timer-container">
+          {/* Timer 28 secondi */}
+          <div className="timer28-section">
+            <div className={`timer28-display ${secondi28 <= 5 ? 'warning' : ''} ${secondi28 === 0 ? 'expired' : ''}`}>
+              {secondi28}
             </div>
-            <span className="timer-separator">:</span>
-            <div className="timer-unit">
-              <button 
-                className="btn-adjust" 
-                onClick={() => modificaTempo(1)} 
-                disabled={timer.attivo}
-              >+</button>
-              <span className="timer-value">{String(secondi).padStart(2, '0')}</span>
-              <button 
-                className="btn-adjust" 
-                onClick={() => modificaTempo(-1)} 
-                disabled={timer.attivo}
-              >-</button>
+            <div className="timer28-buttons">
+              <button className="btn-timer28" onClick={() => resetTimer28(28)}>28</button>
+              <button className="btn-timer28" onClick={() => resetTimer28(18)}>18</button>
             </div>
           </div>
 
-          <div className="timer-controls">
-            {timer.pronto && !timer.attivo && (
-              <button className="btn-timer start" onClick={startTimer}>▶ START</button>
-            )}
-            {timer.attivo && (
-              <button className="btn-timer pause" onClick={pauseTimer}>⏸ PAUSA</button>
-            )}
-            {!timer.attivo && !timer.pronto && timer.secondiRimanenti > 0 && (
-              <button className="btn-timer resume" onClick={resumeTimer}>▶ RIPRENDI</button>
-            )}
-            <button className="btn-timer reset" onClick={resetTimer}>↺ RESET</button>
+          {/* Timer principale */}
+          <div className="timer-display">
+            <div className="tempo-selector">
+              {[1, 2, 3, 4].map(t => (
+                <button
+                  key={t}
+                  className={`btn-tempo ${timer.tempoCorrente === t ? 'active' : ''}`}
+                  onClick={() => cambiaTempo(t)}
+                  disabled={timer.attivo}
+                >
+                  {t}°
+                </button>
+              ))}
+            </div>
+
+            <div className="timer-edit">
+              <div className="timer-unit">
+                <button className="btn-adjust" onClick={() => modificaTempo(60)} disabled={timer.attivo}>+</button>
+                <span className="timer-value">{String(minuti).padStart(2, '0')}</span>
+                <button className="btn-adjust" onClick={() => modificaTempo(-60)} disabled={timer.attivo}>-</button>
+              </div>
+              <span className="timer-separator">:</span>
+              <div className="timer-unit">
+                <button className="btn-adjust" onClick={() => modificaTempo(1)} disabled={timer.attivo}>+</button>
+                <span className="timer-value">{String(secondi).padStart(2, '0')}</span>
+                <button className="btn-adjust" onClick={() => modificaTempo(-1)} disabled={timer.attivo}>-</button>
+              </div>
+            </div>
+
+            <div className="timer-controls">
+              {timer.pronto && !timer.attivo && (
+                <button className="btn-timer start" onClick={startTimer}>▶ START</button>
+              )}
+              {timer.attivo && (
+                <button className="btn-timer pause" onClick={pauseTimer}>⏸ PAUSA</button>
+              )}
+              {!timer.attivo && !timer.pronto && timer.secondiRimanenti > 0 && (
+                <button className="btn-timer resume" onClick={resumeTimer}>▶ RIPRENDI</button>
+              )}
+              <button className="btn-timer reset" onClick={resetTimer}>↺ RESET</button>
+            </div>
           </div>
         </div>
         
@@ -356,23 +385,13 @@ function PartitaLive() {
         <div className="events-area">
           <h3>EVENTI</h3>
           <div className="event-buttons">
-            <button className="btn-event gol" onClick={registraGol}>
-              ⚽ GOL
-            </button>
-            <button className="btn-event et" onClick={registraET}>
-              🟨 ET
-            </button>
-            <button className="btn-event tr" onClick={registraTR}>
-              🎯 TR
-            </button>
+            <button className="btn-event gol" onClick={registraGol}>⚽ GOL</button>
+            <button className="btn-event et" onClick={registraET}>🟨 ET</button>
+            <button className="btn-event tr" onClick={registraTR}>🎯 TR</button>
           </div>
           <div className="timeout-buttons">
-            <button className="btn-timeout bianco" onClick={() => registraTimeout('B')}>
-              ⏱ TIMEOUT B
-            </button>
-            <button className="btn-timeout nero" onClick={() => registraTimeout('N')}>
-              ⏱ TIMEOUT N
-            </button>
+            <button className="btn-timeout bianco" onClick={() => registraTimeout('B')}>⏱ TIMEOUT B</button>
+            <button className="btn-timeout nero" onClick={() => registraTimeout('N')}>⏱ TIMEOUT N</button>
           </div>
         </div>
       </div>
