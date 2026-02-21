@@ -27,13 +27,25 @@ export function TabelloneSyncProvider({ children }) {
 
     setAutoConnecting(true);
 
-    // Try to reach the tabellone via quick HTTP check first
+    // Try to reach the tabellone - start with current host since
+    // the Verbale is served from the Raspberry Pi itself
     const tryAutoConnect = async () => {
-      const ipsToTry = [DEFAULT_HOTSPOT_IP];
+      const ipsToTry = [];
       
-      // Also try saved IP if different from default
+      // First try: the host serving this page (most likely the Pi)
+      const currentHost = window.location.hostname;
+      if (currentHost && currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+        ipsToTry.push(currentHost);
+      }
+
+      // Second try: default hotspot IP
+      if (!ipsToTry.includes(DEFAULT_HOTSPOT_IP)) {
+        ipsToTry.push(DEFAULT_HOTSPOT_IP);
+      }
+      
+      // Third try: saved IP if different
       const savedIP = await localforage.getItem(STORAGE_KEY);
-      if (savedIP && savedIP !== DEFAULT_HOTSPOT_IP) {
+      if (savedIP && !ipsToTry.includes(savedIP)) {
         ipsToTry.push(savedIP);
       }
 
