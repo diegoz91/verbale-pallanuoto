@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { usePartita } from "../context/PartitaContext";
+import { useTabellone } from "../context/TabelloneSyncContext";
 import "../styles/PartitaLive.css";
 
 function PartitaLive() {
   const { state, dispatch, punteggiTotali, formatTempo } = usePartita();
+  const { connected, sendAction, syncET, syncTR, syncTimeout } = useTabellone();
   const { timer, timer28, selezione, squadraBianca, squadraNera, parziali } =
     state;
   const timerRef = useRef(null);
@@ -61,8 +63,10 @@ function PartitaLive() {
     dispatch({ type: "RESET_TIMER_28", payload: secondi });
   };
 
-  // Effect per il countdown principale
+  // Effect per il countdown principale - SOLO quando NON connesso al tabellone
   useEffect(() => {
+    if (connected) return; // Timer gestito dal tabellone
+    
     if (timer.attivo && timer.secondiRimanenti > 0) {
       timerRef.current = setInterval(() => {
         dispatch({ type: "TICK_TIMER" });
@@ -79,10 +83,12 @@ function PartitaLive() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timer.attivo, timer.secondiRimanenti]);
+  }, [timer.attivo, timer.secondiRimanenti, connected]);
 
-  // Effect per il countdown 28 secondi
+  // Effect per il countdown 28 secondi - SOLO quando NON connesso al tabellone
   useEffect(() => {
+    if (connected) return; // Timer gestito dal tabellone
+    
     if (timer28 && timer28.attivo && timer28.secondiRimanenti > 0) {
       timer28Ref.current = setInterval(() => {
         dispatch({ type: "TICK_TIMER_28" });
@@ -95,7 +101,7 @@ function PartitaLive() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timer28?.attivo, timer28?.secondiRimanenti]);
+  }, [timer28?.attivo, timer28?.secondiRimanenti, connected]);
 
   const handleFineTempo = () => {
     const tempoKey = ["primo", "secondo", "terzo", "quarto"][
@@ -160,6 +166,12 @@ function PartitaLive() {
     });
     dispatch({ type: "CLEAR_SELEZIONE" });
 
+    // Sync GOL al tabellone
+    if (connected) {
+      const team = selezione.colore === "B" ? "teamA" : "teamB";
+      sendAction("score_add", { team });
+    }
+
     // Reset timer 28 dopo gol
     resetTimer28(28);
   };
@@ -209,6 +221,11 @@ function PartitaLive() {
     });
     dispatch({ type: "CLEAR_SELEZIONE" });
 
+    // Sync ET al tabellone
+    if (connected) {
+      syncET(selezione.colore, selezione.numero);
+    }
+
     if (livello === 3) {
       alert(
         `Attenzione: Giocatore ${selezione.numero} ESPULSO DEFINITIVAMENTE!`,
@@ -254,6 +271,11 @@ function PartitaLive() {
       payload: { tempo: timer.tempoCorrente, evento },
     });
     dispatch({ type: "CLEAR_SELEZIONE" });
+
+    // Sync TR al tabellone
+    if (connected) {
+      syncTR(selezione.colore, selezione.numero);
+    }
   };
 
   // Timeout
@@ -278,6 +300,11 @@ function PartitaLive() {
       type: "ADD_EVENTO",
       payload: { tempo: timer.tempoCorrente, evento },
     });
+
+    // Sync Timeout al tabellone
+    if (connected) {
+      syncTimeout(squadra);
+    }
   };
 
   // Navigazione
@@ -381,16 +408,25 @@ function PartitaLive() {
 
   {/* Bottoni START/RESET a destra */}
   <div className="timer-controls-section">
-    {timer.pronto && !timer.attivo && (
-      <button className="btn-timer-big start" onClick={startTimer}>▶<br/>START</button>
+    {connected ? (
+      <div className="tabellone-sync-indicator">
+        <span className="sync-dot"></span>
+        SYNC
+      </div>
+    ) : (
+      <>
+        {timer.pronto && !timer.attivo && (
+          <button className="btn-timer-big start" onClick={startTimer}>▶<br/>START</button>
+        )}
+        {timer.attivo && (
+          <button className="btn-timer-big pause" onClick={pauseTimer}>⏸<br/>PAUSA</button>
+        )}
+        {!timer.attivo && !timer.pronto && timer.secondiRimanenti > 0 && (
+          <button className="btn-timer-big resume" onClick={resumeTimer}>▶<br/>RIPRENDI</button>
+        )}
+        <button className="btn-timer-big reset" onClick={resetTimer}>↺<br/>RESET</button>
+      </>
     )}
-    {timer.attivo && (
-      <button className="btn-timer-big pause" onClick={pauseTimer}>⏸<br/>PAUSA</button>
-    )}
-    {!timer.attivo && !timer.pronto && timer.secondiRimanenti > 0 && (
-      <button className="btn-timer-big resume" onClick={resumeTimer}>▶<br/>RIPRENDI</button>
-    )}
-    <button className="btn-timer-big reset" onClick={resetTimer}>↺<br/>RESET</button>
   </div>
 </div>
 

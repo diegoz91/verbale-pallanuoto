@@ -1,9 +1,11 @@
 import React from 'react';
 import { usePartita } from '../context/PartitaContext';
+import { useTabellone } from '../context/TabelloneSyncContext';
 import '../styles/Squadre.css';
 
 function Squadre() {
   const { state, dispatch } = usePartita();
+  const { connected, syncPlayers } = useTabellone();
   const { squadraBianca, squadraNera } = state;
 
   const handleSquadraChange = (squadra, field, value) => {
@@ -25,6 +27,11 @@ function Squadre() {
   };
 
   const handleStart = () => {
+    // Sync giocatori al tabellone se connesso
+    if (connected) {
+      syncPlayers(squadraBianca, 'B');
+      syncPlayers(squadraNera, 'N');
+    }
     dispatch({ type: 'SET_SCREEN', payload: 'partita' });
   };
 
@@ -90,8 +97,17 @@ function Squadre() {
         <button className="btn-secondary" onClick={handleBack}>
           ← INDIETRO
         </button>
+        {connected && (
+          <button className="btn-sync" onClick={() => {
+            syncPlayers(squadraBianca, 'B');
+            syncPlayers(squadraNera, 'N');
+            alert('Giocatori sincronizzati con il tabellone!');
+          }}>
+            🔄 SYNC TABELLONE
+          </button>
+        )}
         <button className="btn-primary btn-large" onClick={handleStart}>
-          🏊 INIZIA PARTITA
+          🏊 INIZIA PARTITA {connected ? '(+ sync)' : ''}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 {
   "name": "verbale-pallanuoto",
   "version": "1.0.0",
+  "homepage": ".",
   "description": "App per verbale partita di pallanuoto - FIN",
   "private": true,
   "dependencies": {

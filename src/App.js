@@ -1,5 +1,6 @@
 import React from 'react';
 import { PartitaProvider, usePartita } from './context/PartitaContext';
+import { TabelloneSyncProvider } from './context/TabelloneSyncContext';
 import InfoPartita from './components/InfoPartita';
 import Squadre from './components/Squadre';
 import PartitaLive from './components/PartitaLive';
@@ -43,7 +44,9 @@ function AppContent() {
 function App() {
   return (
     <PartitaProvider>
-      <AppContent />
+      <TabelloneSyncProvider>
+        <AppContent />
+      </TabelloneSyncProvider>
     </PartitaProvider>
   );
 }

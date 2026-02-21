@@ -88,6 +88,9 @@ const initialState = {
     quarto: { bianco: 0, nero: 0 }
   },
 
+  // Sync con tabellone
+  tabelloneSync: false,
+
   // Allegato Sanzioni
   allegatoSanzioni: {
     notizieGiustizia: '',
@@ -396,6 +399,26 @@ function partitaReducer(state, action) {
 
     case 'LOAD_STATE':
       return { ...initialState, ...action.payload };
+
+    case 'SYNC_FROM_TABELLONE': {
+      const { timer: syncTimer, timer28: syncTimer28 } = action.payload;
+      return {
+        ...state,
+        timer: {
+          ...state.timer,
+          tempoCorrente: syncTimer.tempoCorrente,
+          secondiRimanenti: syncTimer.secondiRimanenti,
+          attivo: syncTimer.attivo,
+          pronto: syncTimer.pronto
+        },
+        timer28: {
+          ...state.timer28,
+          secondiRimanenti: syncTimer28.secondiRimanenti,
+          attivo: syncTimer28.attivo
+        },
+        tabelloneSync: true
+      };
+    }
 
     case 'UPDATE_ALLEGATO_SANZIONI':
       return {

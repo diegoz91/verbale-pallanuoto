@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePartita } from '../context/PartitaContext';
+import { useTabellone } from '../context/TabelloneSyncContext';
 import '../styles/InfoPartita.css';
 
 function InfoPartita() {
   const { state, dispatch } = usePartita();
+  const { connected, connecting, tabelloneIP, setTabelloneIP, connect, disconnect } = useTabellone();
   const { infoPartita } = state;
+  const [ipInput, setIpInput] = useState(tabelloneIP || '');
 
   const handleChange = (field, value) => {
     dispatch({
@@ -26,6 +29,12 @@ function InfoPartita() {
     dispatch({ type: 'SET_SCREEN', payload: 'squadre' });
   };
 
+  const handleConnect = () => {
+    if (ipInput.trim()) {
+      connect(ipInput.trim());
+    }
+  };
+
   return (
     <div className="info-partita-screen">
       <div className="header">
@@ -34,6 +43,49 @@ function InfoPartita() {
       </div>
 
       <div className="form-container">
+        {/* Sezione Connessione Tabellone */}
+        <div className="form-section tabellone-section">
+          <h2>📺 Connessione Tabellone</h2>
+          <div className="tabellone-connect-row">
+            <div className="input-group">
+              <label>IP Raspberry Pi</label>
+              <input
+                type="text"
+                placeholder="es: 192.168.4.1"
+                value={ipInput}
+                onChange={(e) => {
+                  setIpInput(e.target.value);
+                  setTabelloneIP(e.target.value);
+                }}
+                disabled={connected}
+              />
+            </div>
+            {connected ? (
+              <button className="btn-tabellone btn-disconnect" onClick={disconnect}>
+                ✓ CONNESSO — DISCONNETTI
+              </button>
+            ) : (
+              <button 
+                className="btn-tabellone btn-connect" 
+                onClick={handleConnect}
+                disabled={connecting || !ipInput.trim()}
+              >
+                {connecting ? '⏳ CONNESSIONE...' : '🔗 CONNETTI'}
+              </button>
+            )}
+          </div>
+          {connected && (
+            <p className="tabellone-status connected">
+              Timer sincronizzato con il tabellone. ET, TR e Timeout verranno inviati automaticamente.
+            </p>
+          )}
+          {!connected && !connecting && (
+            <p className="tabellone-status">
+              Opzionale: connetti al tabellone per sincronizzare timer e falli.
+            </p>
+          )}
+        </div>
+
         <div className="form-row">
           <div className="form-section">
             <h2>📅 Informazioni Gara</h2>
