@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePartita } from '../context/PartitaContext';
 import { useTabellone } from '../context/TabelloneSyncContext';
 import '../styles/InfoPartita.css';
 
 function InfoPartita() {
   const { state, dispatch } = usePartita();
-  const { connected, connecting, tabelloneIP, setTabelloneIP, connect, disconnect } = useTabellone();
+  const { connected, connecting, autoConnecting, tabelloneIP, setTabelloneIP, connect, disconnect } = useTabellone();
   const { infoPartita } = state;
   const [ipInput, setIpInput] = useState(tabelloneIP || '');
+
+  // Sync input field when auto-connect finds the IP
+  useEffect(() => {
+    if (tabelloneIP && !ipInput) {
+      setIpInput(tabelloneIP);
+    }
+  }, [tabelloneIP]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (field, value) => {
     dispatch({
@@ -46,43 +53,53 @@ function InfoPartita() {
         {/* Sezione Connessione Tabellone */}
         <div className="form-section tabellone-section">
           <h2>📺 Connessione Tabellone</h2>
-          <div className="tabellone-connect-row">
-            <div className="input-group">
-              <label>IP Raspberry Pi</label>
-              <input
-                type="text"
-                placeholder="es: 192.168.4.1"
-                value={ipInput}
-                onChange={(e) => {
-                  setIpInput(e.target.value);
-                  setTabelloneIP(e.target.value);
-                }}
-                disabled={connected}
-              />
+          
+          {autoConnecting ? (
+            <div className="tabellone-auto-connect">
+              <div className="auto-connect-spinner"></div>
+              <p>Ricerca tabellone in corso...</p>
             </div>
-            {connected ? (
-              <button className="btn-tabellone btn-disconnect" onClick={disconnect}>
-                ✓ CONNESSO — DISCONNETTI
-              </button>
-            ) : (
-              <button 
-                className="btn-tabellone btn-connect" 
-                onClick={handleConnect}
-                disabled={connecting || !ipInput.trim()}
-              >
-                {connecting ? '⏳ CONNESSIONE...' : '🔗 CONNETTI'}
-              </button>
-            )}
-          </div>
-          {connected && (
-            <p className="tabellone-status connected">
-              Timer sincronizzato con il tabellone. ET, TR e Timeout verranno inviati automaticamente.
-            </p>
-          )}
-          {!connected && !connecting && (
-            <p className="tabellone-status">
-              Opzionale: connetti al tabellone per sincronizzare timer e falli.
-            </p>
+          ) : (
+            <>
+              <div className="tabellone-connect-row">
+                <div className="input-group">
+                  <label>IP Raspberry Pi</label>
+                  <input
+                    type="text"
+                    placeholder="es: 192.168.4.1"
+                    value={ipInput}
+                    onChange={(e) => {
+                      setIpInput(e.target.value);
+                      setTabelloneIP(e.target.value);
+                    }}
+                    disabled={connected}
+                  />
+                </div>
+                {connected ? (
+                  <button className="btn-tabellone btn-disconnect" onClick={disconnect}>
+                    ✓ CONNESSO — DISCONNETTI
+                  </button>
+                ) : (
+                  <button 
+                    className="btn-tabellone btn-connect" 
+                    onClick={handleConnect}
+                    disabled={connecting || !ipInput.trim()}
+                  >
+                    {connecting ? '⏳ CONNESSIONE...' : '🔗 CONNETTI'}
+                  </button>
+                )}
+              </div>
+              {connected && (
+                <p className="tabellone-status connected">
+                  ✅ Timer sincronizzato con il tabellone. ET, TR, Gol e Timeout verranno inviati automaticamente.
+                </p>
+              )}
+              {!connected && !connecting && (
+                <p className="tabellone-status">
+                  Tabellone non trovato automaticamente. Inserisci l'IP manualmente o connettiti al Wi-Fi del tabellone.
+                </p>
+              )}
+            </>
           )}
         </div>
 

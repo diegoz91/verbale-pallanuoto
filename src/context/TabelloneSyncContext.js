@@ -4,6 +4,8 @@ import localforage from 'localforage';
 
 const RECONNECT_DELAY = 3000;
 const STORAGE_KEY = 'tabellone_ip';
+const DEFAULT_HOTSPOT_IP = '192.168.4.1';
+const AUTO_CONNECT_TIMEOUT = 3000; // 3 secondi per tentativo auto
 
 const TabelloneSyncContext = createContext();
 
@@ -12,16 +14,75 @@ export function TabelloneSyncProvider({ children }) {
   const wsRef = useRef(null);
   const reconnectRef = useRef(null);
   const manualDisconnectRef = useRef(false);
+  const autoConnectDoneRef = useRef(false);
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [tabelloneIP, setTabelloneIP] = useState('');
+  const [autoConnecting, setAutoConnecting] = useState(true);
 
-  // Load saved IP on mount
+  // Auto-connect on mount: try default hotspot IP
   useEffect(() => {
-    localforage.getItem(STORAGE_KEY).then(ip => {
-      if (ip) setTabelloneIP(ip);
-    });
+    if (autoConnectDoneRef.current) return;
+    autoConnectDoneRef.current = true;
+
+    setAutoConnecting(true);
+
+    // Try to reach the tabellone via quick HTTP check first
+    const tryAutoConnect = async () => {
+      const ipsToTry = [DEFAULT_HOTSPOT_IP];
+      
+      // Also try saved IP if different from default
+      const savedIP = await localforage.getItem(STORAGE_KEY);
+      if (savedIP && savedIP !== DEFAULT_HOTSPOT_IP) {
+        ipsToTry.push(savedIP);
+      }
+
+      for (const ip of ipsToTry) {
+        try {
+          // Quick check: try to open WebSocket with timeout
+          const found = await testConnection(ip);
+          if (found) {
+            setTabelloneIP(ip);
+            setAutoConnecting(false);
+            connect(ip);
+            return;
+          }
+        } catch (e) {
+          // IP not reachable, try next
+        }
+      }
+
+      // No tabellone found, show manual input
+      setAutoConnecting(false);
+      if (savedIP) setTabelloneIP(savedIP);
+    };
+
+    tryAutoConnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Quick test if tabellone is reachable
+  const testConnection = (ip) => {
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        ws.close();
+        resolve(false);
+      }, AUTO_CONNECT_TIMEOUT);
+
+      const ws = new WebSocket(`ws://${ip}:8080/ws/verbale`);
+      
+      ws.onopen = () => {
+        clearTimeout(timeout);
+        ws.close();
+        resolve(true);
+      };
+      
+      ws.onerror = () => {
+        clearTimeout(timeout);
+        resolve(false);
+      };
+    });
+  };
 
   // Send message to tabellone
   const sendAction = useCallback((action, payload = {}) => {
@@ -178,6 +239,7 @@ export function TabelloneSyncProvider({ children }) {
     <TabelloneSyncContext.Provider value={{
       connected,
       connecting,
+      autoConnecting,
       tabelloneIP,
       setTabelloneIP,
       connect,
