@@ -371,9 +371,43 @@ export async function generatePDF(state, punteggiTotali) {
   doc.setTextColor(100, 100, 100);
   doc.text(`Generato il ${new Date().toLocaleString('it-IT')}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
 
-  // Salva
+  // Salva - compatibile con Capacitor WebView
   const fileName = `Verbale_${(squadraBianca.nome || 'Bianca').replace(/\s+/g, '_')}_vs_${(squadraNera.nome || 'Nera').replace(/\s+/g, '_')}_${formatDate(infoPartita.data).replace(/\//g, '-')}.pdf`;
-  doc.save(fileName);
+  
+  try {
+    // Prova il metodo standard (funziona su browser desktop)
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    
+    // Crea un link invisibile e simula il click
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup dopo un attimo
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1000);
+    
+    // Fallback: apri in una nuova tab se il download non parte
+    setTimeout(() => {
+      // Se siamo in Capacitor/WebView, apri il PDF in una nuova finestra
+      if (window.Capacitor || navigator.userAgent.includes('wv')) {
+        window.open(url, '_blank');
+      }
+    }, 500);
+  } catch (e) {
+    // Ultimo fallback: usa il metodo datauristring
+    const dataUri = doc.output('datauristring');
+    const newWindow = window.open();
+    if (newWindow) {
+      newWindow.document.write(`<iframe width="100%" height="100%" src="${dataUri}"></iframe>`);
+    }
+  }
   
   return fileName;
 }

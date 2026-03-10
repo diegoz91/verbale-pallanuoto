@@ -68,7 +68,7 @@
 
 .table-header-row {
   display: grid;
-  grid-template-columns: 50px 150px 100px repeat(4, 50px) 60px repeat(3, 120px);
+  grid-template-columns: 50px 150px 100px repeat(4, 50px) 60px repeat(3, 120px) 50px;
   padding: 12px 16px;
   background: #f3f4f6;
   font-size: 11px;
@@ -85,7 +85,7 @@
 
 .giocatori-table .table-row {
   display: grid;
-  grid-template-columns: 50px 150px 100px repeat(4, 50px) 60px repeat(3, 120px);
+  grid-template-columns: 50px 150px 100px repeat(4, 50px) 60px repeat(3, 120px) 50px;
   padding: 10px 16px;
   border-bottom: 1px solid #f3f4f6;
   align-items: center;
@@ -217,4 +217,55 @@
   font-size: 24px;
   font-weight: 700;
   color: #1a56db;
+}
+/* Edit mode */
+.col-edit {
+  text-align: center;
+}
+
+.btn-edit-row {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.btn-edit-row:hover {
+  background: #e5e7eb;
+}
+
+.btn-save-edit {
+  background: #10b981;
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.btn-save-edit:hover {
+  background: #059669;
+}
+
+.edit-input {
+  padding: 6px 8px;
+  border: 2px solid #3b82f6;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #eff6ff;
+  outline: none;
+  width: 90%;
+}
+
+.edit-input:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.table-row.editing {
+  background: #eff6ff !important;
 }

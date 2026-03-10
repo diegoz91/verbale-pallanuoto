@@ -10,6 +10,31 @@ function PartitaLive() {
     state;
   const timerRef = useRef(null);
   const timer28Ref = useRef(null);
+  const autoResumeRef = useRef(null);
+
+  // Auto-pausa: ferma i timer per 2 secondi quando si registra un evento (solo standalone)
+  const autoPause = useCallback(() => {
+    if (connected || !timer.attivo) return;
+    
+    if (autoResumeRef.current) {
+      clearTimeout(autoResumeRef.current);
+    }
+    
+    dispatch({ type: "SET_TIMER", payload: { attivo: false } });
+    dispatch({ type: "SET_TIMER_28", payload: { attivo: false } });
+    
+    autoResumeRef.current = setTimeout(() => {
+      dispatch({ type: "SET_TIMER", payload: { attivo: true } });
+      dispatch({ type: "SET_TIMER_28", payload: { attivo: true } });
+      autoResumeRef.current = null;
+    }, 2000);
+  }, [connected, timer.attivo, dispatch]);
+
+  useEffect(() => {
+    return () => {
+      if (autoResumeRef.current) clearTimeout(autoResumeRef.current);
+    };
+  }, []);
 
   // Gestione timer principale
   const startTimer = useCallback(() => {
@@ -20,6 +45,10 @@ function PartitaLive() {
   }, [timer.pronto, timer.attivo, dispatch]);
 
   const pauseTimer = useCallback(() => {
+    if (autoResumeRef.current) {
+      clearTimeout(autoResumeRef.current);
+      autoResumeRef.current = null;
+    }
     dispatch({ type: "SET_TIMER", payload: { attivo: false } });
     dispatch({ type: "SET_TIMER_28", payload: { attivo: false } });
   }, [dispatch]);
@@ -137,6 +166,7 @@ function PartitaLive() {
       return;
     }
 
+    autoPause();
     const tempo = formatTempo();
     const evento = {
       tempo,
@@ -193,6 +223,7 @@ function PartitaLive() {
       return;
     }
 
+    autoPause();
     const tempo = formatTempo();
     const livello = giocatore ? giocatore.falliPersonali.length + 1 : 1;
 
@@ -240,6 +271,7 @@ function PartitaLive() {
       return;
     }
 
+    autoPause();
     const tempo = formatTempo();
     const squadra = selezione.colore === "B" ? squadraBianca : squadraNera;
     const giocatore = squadra.giocatori.find(
@@ -286,6 +318,7 @@ function PartitaLive() {
       return;
     }
 
+    autoPause();
     dispatch({ type: "INCREMENT_TIMEOUT", payload: squadra });
 
     const tempo = formatTempo();

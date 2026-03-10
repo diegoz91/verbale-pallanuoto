@@ -1,16 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePartita } from '../context/PartitaContext';
 import '../styles/Giocatori.css';
 
 function Giocatori() {
   const { state, dispatch } = usePartita();
   const { viewingTeam, squadraBianca, squadraNera } = state;
+  const [editingIndex, setEditingIndex] = useState(null);
   
   const squadra = viewingTeam === 'B' ? squadraBianca : squadraNera;
   const colore = viewingTeam === 'B' ? 'Bianca' : 'Nera';
 
   const handleBack = () => {
+    setEditingIndex(null);
     dispatch({ type: 'SET_SCREEN', payload: 'partita' });
+  };
+
+  const handleGiocatoreChange = (index, field, value) => {
+    dispatch({
+      type: 'UPDATE_GIOCATORE',
+      payload: { squadra: viewingTeam, index, data: { [field]: value } }
+    });
   };
 
   const getTotaleReti = (giocatore) => {
@@ -45,37 +54,70 @@ function Giocatori() {
           <span className="col-falli">FALLO 1</span>
           <span className="col-falli">FALLO 2</span>
           <span className="col-falli">FALLO 3</span>
+          <span className="col-edit">EDIT</span>
         </div>
 
         <div className="table-body">
           {squadra.giocatori.map((giocatore, index) => (
-            <div key={index} className={`table-row ${giocatore.falliPersonali.length >= 3 ? 'espulso' : ''}`}>
-              <span className="col-num">{giocatore.numero}</span>
-              <span className="col-nome">{giocatore.nome || '-'}</span>
-              <span className="col-tessera">{giocatore.tesseraFIN || '-'}</span>
-              <span className="col-reti">{giocatore.reti.primo || '-'}</span>
-              <span className="col-reti">{giocatore.reti.secondo || '-'}</span>
-              <span className="col-reti">{giocatore.reti.terzo || '-'}</span>
-              <span className="col-reti">{giocatore.reti.quarto || '-'}</span>
-              <span className="col-reti-tot">{getTotaleReti(giocatore) || '-'}</span>
+            <div key={index} className={`table-row ${giocatore.falliPersonali.length >= 3 ? 'espulso' : ''} ${editingIndex === index ? 'editing' : ''}`}>
               
-              {/* Falli personali */}
-              {[0, 1, 2].map(falloIndex => {
-                const fallo = giocatore.falliPersonali[falloIndex];
-                return (
-                  <span 
-                    key={falloIndex} 
-                    className={`col-falli ${fallo ? getFalloStyle(fallo.livello) : ''}`}
-                  >
-                    {fallo ? (
-                      <>
-                        <span className="fallo-tempo">{fallo.tempo}</span>
-                        <span className="fallo-tipo">{fallo.tipo}</span>
-                      </>
-                    ) : '-'}
-                  </span>
-                );
-              })}
+              {editingIndex === index ? (
+                <>
+                  <span className="col-num">{giocatore.numero}</span>
+                  <input
+                    type="text"
+                    className="col-nome edit-input"
+                    value={giocatore.nome}
+                    placeholder="Cognome"
+                    onChange={(e) => handleGiocatoreChange(index, 'nome', e.target.value)}
+                    autoFocus
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    className="col-tessera edit-input"
+                    value={giocatore.tesseraFIN}
+                    placeholder="Tessera"
+                    maxLength="7"
+                    onChange={(e) => handleGiocatoreChange(index, 'tesseraFIN', e.target.value.replace(/\D/g, ''))}
+                  />
+                  <span className="col-reti">{giocatore.reti.primo || '-'}</span>
+                  <span className="col-reti">{giocatore.reti.secondo || '-'}</span>
+                  <span className="col-reti">{giocatore.reti.terzo || '-'}</span>
+                  <span className="col-reti">{giocatore.reti.quarto || '-'}</span>
+                  <span className="col-reti-tot">{getTotaleReti(giocatore) || '-'}</span>
+                  {[0, 1, 2].map(falloIndex => {
+                    const fallo = giocatore.falliPersonali[falloIndex];
+                    return (
+                      <span key={falloIndex} className={`col-falli ${fallo ? getFalloStyle(fallo.livello) : ''}`}>
+                        {fallo ? <><span className="fallo-tempo">{fallo.tempo}</span><span className="fallo-tipo">{fallo.tipo}</span></> : '-'}
+                      </span>
+                    );
+                  })}
+                  <button className="col-edit btn-save-edit" onClick={() => setEditingIndex(null)}>✓</button>
+                </>
+              ) : (
+                <>
+                  <span className="col-num">{giocatore.numero}</span>
+                  <span className="col-nome">{giocatore.nome || '-'}</span>
+                  <span className="col-tessera">{giocatore.tesseraFIN || '-'}</span>
+                  <span className="col-reti">{giocatore.reti.primo || '-'}</span>
+                  <span className="col-reti">{giocatore.reti.secondo || '-'}</span>
+                  <span className="col-reti">{giocatore.reti.terzo || '-'}</span>
+                  <span className="col-reti">{giocatore.reti.quarto || '-'}</span>
+                  <span className="col-reti-tot">{getTotaleReti(giocatore) || '-'}</span>
+                  {[0, 1, 2].map(falloIndex => {
+                    const fallo = giocatore.falliPersonali[falloIndex];
+                    return (
+                      <span key={falloIndex} className={`col-falli ${fallo ? getFalloStyle(fallo.livello) : ''}`}>
+                        {fallo ? <><span className="fallo-tempo">{fallo.tempo}</span><span className="fallo-tipo">{fallo.tipo}</span></> : '-'}
+                      </span>
+                    );
+                  })}
+                  <button className="col-edit btn-edit-row" onClick={() => setEditingIndex(index)}>✏️</button>
+                </>
+              )}
             </div>
           ))}
         </div>
